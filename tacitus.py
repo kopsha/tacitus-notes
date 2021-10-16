@@ -28,12 +28,16 @@ def parse_history(raw_log):
             body = body.strip()
             history.append((subject, body))
         else:
-            assert not bool(subject.strip()), f"Cannot skip non-empty sequence: {subject.strip()}"
+            assert not bool(
+                subject.strip()
+            ), f"Cannot skip non-empty sequence: {subject.strip()}"
 
     return history
 
 
-def generate_release_notes(history):
+def generate_release_notes(history, title, include_body=True):
+    """renders release notes from history using markdown syntax"""
+
     updates = list()
     fixes = list()
 
@@ -43,7 +47,7 @@ def generate_release_notes(history):
         subject = re.sub(r"^\*\s+", r"", subject)
         notes.append(f"* {subject.capitalize()}")
 
-        if body:
+        if body and include_body:
             for line in body.split("\n"):
                 line = line.strip()
                 if line.startswith("Co-authored-by:"):
@@ -59,18 +63,32 @@ def generate_release_notes(history):
         else:
             updates.append(full_note)
 
-
     release_notes = list()
-    release_notes.extend(("# Release title", "", "",))
+    release_notes.extend(
+        (
+            f"# {title.title()}",
+            "",
+            "",
+        )
+    )
 
     if updates:
-        release_notes.extend(("## Features and improvements", "",))
+        release_notes.extend(
+            (
+                "## Features and improvements",
+                "",
+            )
+        )
         release_notes.extend(updates)
         release_notes.extend(("", ""))
 
-
     if fixes:
-        release_notes.extend(("## Fixes", "",))
+        release_notes.extend(
+            (
+                "## Fixes",
+                "",
+            )
+        )
         release_notes.extend(fixes)
 
     text = "\n".join(release_notes)
@@ -86,17 +104,18 @@ def main():
         # pick only major version
         since = re.sub(r"^(v\d+\.\d+).*", r"\1", since)
 
-
-    git_log, error_code = exec(f"git --no-pager log {since}..HEAD --format='%s>>>%b<<<'")
+    git_log, error_code = exec(
+        f"git --no-pager log {since}..HEAD --format='%s>>>%b<<<'"
+    )
     if error_code:
         print("Cannot read git history, reason:", git_log)
 
     history = parse_history(git_log)
-    markdown_text = generate_release_notes(history)
+    markdown_text = generate_release_notes(
+        history, title="release title", include_body=False
+    )
 
-    print("----")
     print(markdown_text)
-    print("----")
 
 
 if __name__ == "__main__":
