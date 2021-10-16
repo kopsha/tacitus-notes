@@ -15,6 +15,11 @@ message in a markdown format:
 
 ## shellscript version
 
+```bash
+git describe --tags --abbrev=0
+git log $(git describe --tags --abbrev=0)..HEAD --oneline
+```
+
 
 ## python version
 
