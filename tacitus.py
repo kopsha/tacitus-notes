@@ -101,8 +101,8 @@ def main():
         # if no tag was found, get first commit
         since, error_code = exec("git rev-list --max-parents=0 HEAD | head -1")
     else:
-        # pick only major version
-        since = re.sub(r"^(v\d+\.\d+).*", r"\1", since)
+        # pick only major versions
+        since = re.sub(r"^(v?\d+\.\d+).*", r"\1", since)
 
     git_log, error_code = exec(
         f"git --no-pager log {since}..HEAD --format='%s>>>%b<<<'"
