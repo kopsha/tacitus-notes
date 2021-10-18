@@ -17,7 +17,7 @@ def exec(command):
 def parse_issue_tracking(subject):
     """parse and build issue tracker url from issue number"""
 
-    has_tracker_ref = re.compile(r"\(#(\w+)\)")
+    has_tracker_ref = re.compile(r"\[#(\w+)\]")
     print(subject, bool(has_tracker_ref.findall(subject)))
     if ref := has_tracker_ref.findall(subject):
         issue_id = ref[0]
