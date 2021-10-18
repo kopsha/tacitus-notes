@@ -14,6 +14,20 @@ def exec(command):
     return result.stdout.decode("utf-8").strip(), result.returncode
 
 
+def parse_issue_tracking(subject):
+    """parse and build issue tracker url from issue number"""
+
+    has_tracker_ref = re.compile(r"\(#(\w+)\)")
+    print(subject, bool(has_tracker_ref.findall(subject)))
+    if ref := has_tracker_ref.findall(subject):
+        issue_id = ref[0]
+        url = f"https://www.pivotaltracker.com/story/show/{issue_id}"
+    else:
+        url = None
+
+    return url
+
+
 def parse_history(raw_log):
     """given raw git log, parses into commit subject and body"""
 
@@ -26,7 +40,8 @@ def parse_history(raw_log):
         if x_sep:
             subject = subject.strip()
             body = body.strip()
-            history.append((subject, body))
+            issue_url = parse_issue_tracking(subject)
+            history.append((subject, body, issue_url))
         else:
             assert not bool(
                 subject.strip()
@@ -42,10 +57,14 @@ def generate_release_notes(history, title, include_body=True):
     fixes = list()
 
     is_fix = re.compile(r"(fix|fixes|fixed|hotfix)", re.IGNORECASE)
-    for subject, body in history:
+    for subject, body, url in history:
         notes = list()
         subject = re.sub(r"^\*\s+", r"", subject)
-        notes.append(f"* {subject.capitalize()}")
+
+        if url:
+            notes.append(f"* [{subject.capitalize()}]({url})")
+        else:
+            notes.append(f"* {subject.capitalize()}")
 
         if body and include_body:
             for line in body.split("\n"):
