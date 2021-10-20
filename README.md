@@ -1,6 +1,6 @@
 # tacitus-notes
 
-Publius Cornelius [Tacitus](https://en.wikipedia.org/wiki/Tacitus) was a Roman
+[Publius Cornelius Tacitus](https://en.wikipedia.org/wiki/Tacitus) was a Roman
 historian and politician. And quite recently, he started writing notes on our git
 repositories.
 
@@ -22,4 +22,10 @@ git log $(git describe --tags --abbrev=0)..HEAD --oneline
 
 
 ## python version
+
+Run this script in your project directory and see what happens.
+
+```bash
+python tacitus.py
+```
 
