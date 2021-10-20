@@ -18,15 +18,25 @@ def parse_issue_tracking(subject):
     """parse and build issue tracker url from issue number"""
 
     has_tracker_ref = re.compile(r"\[#(\w+)\]")
-    print(subject, bool(has_tracker_ref.findall(subject)))
     if ref := has_tracker_ref.findall(subject):
         issue_id = ref[0]
         url = f"https://www.pivotaltracker.com/story/show/{issue_id}"
+        subject = has_tracker_ref.sub("", subject)
     else:
         url = None
 
-    return url
+    return url, subject
 
+
+def parse_github_pr(subject):
+    has_github_pr = re.compile(r"\(#\d+\)")
+    if ref := has_github_pr.findall(subject):
+        pr_ref = ref[0]
+        subject = has_github_pr.sub("", subject)
+    else:
+        pr_ref = None
+
+    return pr_ref, subject
 
 def parse_history(raw_log):
     """given raw git log, parses into commit subject and body"""
@@ -38,9 +48,10 @@ def parse_history(raw_log):
         raw_entry, sep, remaining = remaining.partition("<<<")
         subject, x_sep, body = raw_entry.partition(">>>")
         if x_sep:
-            subject = subject.strip()
             body = body.strip()
-            issue_url = parse_issue_tracking(subject)
+            _, subject = parse_github_pr(subject)
+            issue_url, subject = parse_issue_tracking(subject)
+            subject = subject.strip()
             history.append((subject, body, issue_url))
         else:
             assert not bool(
@@ -130,8 +141,10 @@ def main():
         print("Cannot read git history, reason:", git_log)
 
     history = parse_history(git_log)
+
+    proposed_tag, error_code = exec("git describe")
     markdown_text = generate_release_notes(
-        history, title="release title", include_body=False
+        history, title=f"Release {proposed_tag}", include_body=False
     )
 
     print(markdown_text)
