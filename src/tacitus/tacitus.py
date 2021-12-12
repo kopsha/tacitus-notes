@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import argparse
 import re
+import sys
 import subprocess
 
 
@@ -12,6 +14,19 @@ def exec(command):
         return result.stderr.decode("utf-8").strip(), result.returncode
 
     return result.stdout.decode("utf-8").strip(), result.returncode
+
+
+def exec_no_fail(command):
+    """runs shell command and capture the output"""
+
+    result = subprocess.run(command, shell=True, capture_output=True)
+
+    if result.returncode:
+        print(f"Error executing: {command}")
+        sys.exit(result.stderr.decode("utf-8").strip())
+
+    return result.stdout.decode("utf-8").strip()
+
 
 
 def parse_issue_tracking(subject):
@@ -125,27 +140,51 @@ def generate_release_notes(history, title, include_body=True):
     return text
 
 
-def main():
-    since, error_code = exec("git describe --tags --abbrev=0")
+def detect_range_start(first_arg):
+    """
+    picks first commit as follows:
+    * from `first` argument, or
+    * last major version found in tag, or
+    * the first commit in history
+    """
+
+    if first_arg:
+        commit_hash = exec_no_fail(f"git rev-parse --short {first_arg}")
+        return commit_hash
+
+    commit_hash, error_code = exec("git describe --tags --abbrev=0")
     if error_code:
-        # if no tag was found, get first commit
-        since, error_code = exec("git rev-list --max-parents=0 HEAD | head -1")
+        commit_hash = exec_no_fail("git rev-list --max-parents=0 HEAD | head -1")
     else:
-        # pick only major versions
-        since = re.sub(r"^(v?\d+\.\d+).*", r"\1", since)
+        commit_hash = re.sub(r"^(v?\d+\.\d+).*", r"\1", commit_hash)
 
-    git_log, error_code = exec(
-        f"git --no-pager log {since}..HEAD --format='%s>>>%b<<<'"
-    )
-    if error_code:
-        print("Cannot read git history, reason:", git_log)
+    return commit_hash
 
+
+def detect_range_end(last_arg):
+    """picks last commit from argument or head"""
+
+    if last_arg:
+        commit_hash = exec_no_fail(f"git rev-parse --short {last_arg}")
+    else:
+        commit_hash = "HEAD"
+
+    return commit_hash
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--first", help="Commit hash to use as starting point")
+    parser.add_argument("--last", help="Commit hash to use as stopping point")
+    args = parser.parse_args()
+
+    first = detect_range_start(args.first)
+    last = detect_range_end(args.last)
+
+    git_log = exec_no_fail(f"git --no-pager log {first}..{last} --format='%s>>>%b<<<'")
     history = parse_history(git_log)
 
-    proposed_tag, error_code = exec("git describe")
-    markdown_text = generate_release_notes(
-        history, title=f"Release {proposed_tag}", include_body=False
-    )
+    proposed_tag, _ = exec("git describe")
+    markdown_text = generate_release_notes(history, title=f"Release {proposed_tag}", include_body=False)
 
     print(markdown_text)
 
