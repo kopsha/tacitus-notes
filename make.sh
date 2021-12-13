@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+# TODO: replace this with a real makefile
 
 check()
 {
