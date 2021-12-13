@@ -4,6 +4,8 @@ import re
 import sys
 import subprocess
 
+from ._version import __version__
+
 
 def exec(command):
     """runs shell command and capture the output"""
@@ -179,7 +181,6 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        from _version import __version__
         print(f"{sys.argv[0]} v{__version__}")
         sys.exit()
 
