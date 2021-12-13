@@ -175,7 +175,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--first", help="Commit hash to use as starting point")
     parser.add_argument("--last", help="Commit hash to use as stopping point")
+    parser.add_argument("--version", action="store_true", help="Prints version and quits")
     args = parser.parse_args()
+
+    if args.version:
+        from _version import __version__
+        print(f"{sys.argv[0]} v{__version__}")
+        sys.exit()
 
     first = detect_range_start(args.first)
     last = detect_range_end(args.last)
