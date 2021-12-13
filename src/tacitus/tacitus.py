@@ -30,7 +30,6 @@ def exec_no_fail(command):
     return result.stdout.decode("utf-8").strip()
 
 
-
 def parse_issue_tracking(subject):
     """parse and build issue tracker url from issue number"""
 
@@ -54,6 +53,7 @@ def parse_github_pr(subject):
         pr_ref = None
 
     return pr_ref, subject
+
 
 def parse_history(raw_log):
     """given raw git log, parses into commit subject and body"""
@@ -173,15 +173,20 @@ def detect_range_end(last_arg):
 
     return commit_hash
 
+
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Generate release notes in markdown format"
+    )
     parser.add_argument("--first", help="Commit hash to use as starting point")
     parser.add_argument("--last", help="Commit hash to use as stopping point")
-    parser.add_argument("--version", action="store_true", help="Prints version and quits")
+    parser.add_argument(
+        "--version", action="store_true", help="Shows application version and quits"
+    )
     args = parser.parse_args()
 
     if args.version:
-        print(f"{sys.argv[0]} v{__version__}")
+        print(f"{parser.prog} v{__version__}")
         sys.exit()
 
     first = detect_range_start(args.first)
@@ -191,7 +196,9 @@ def main():
     history = parse_history(git_log)
 
     proposed_tag, _ = exec("git describe")
-    markdown_text = generate_release_notes(history, title=f"Release {proposed_tag}", include_body=False)
+    markdown_text = generate_release_notes(
+        history, title=f"Release {proposed_tag}", include_body=False
+    )
 
     print(markdown_text)
 
