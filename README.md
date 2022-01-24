@@ -23,9 +23,14 @@ git log $(git describe --tags --abbrev=0)..HEAD --oneline
 
 ## python version
 
-Run this script in your project directory and see what happens.
+First, install the tiny script:
 
 ```bash
-python tacitus.py
+$ pip install tacitus-notes
 ```
 
+Then, run this command in your project directory and see what happens:
+
+```bash
+$ tacitus-notes
+```
