@@ -34,3 +34,8 @@ Then, run this command in your project directory and see what happens:
 ```bash
 $ tacitus-notes
 ```
+
+You can use `--first` and `--last` arguments to define ranges
+```bash
+$ tacitus-notes --first=<commit_hash> --last=<commit_hash>
+```
